@@ -25,9 +25,10 @@
 {{ define "location" }}
 location {{ .Path }} {
   {{if eq .Path "/api/"}}
-    proxy_read_timeout 300; 
-    proxy_connect_timeout 300;
-    proxy_send_timeout 300; 
+  ## api service needs long timeouts
+  proxy_read_timeout 300; 
+  proxy_connect_timeout 300;
+  proxy_send_timeout 300; 
   {{ end }}
 
 	{{ if eq .Proto "uwsgi" }}
@@ -57,6 +58,11 @@ location {{ .Path }} {
 {{ define "upstream-definition" }}
 	{{ $networks := .Networks }}
 	upstream {{ .Upstream }} {
+    {{if eq .Path "/ssh/"}}
+    # Socketio 
+    hash $remote_addr consistent;
+    {{ end }}
+
 		{{ range $container := .Containers }}
 			{{ $addrLen := len $container.Addresses }}
 			{{ range $knownNetwork := $networks }}
@@ -170,7 +176,7 @@ proxy_set_header Proxy "";
 		{{ $sum := sha1 $path }}
 		{{ $upstream := printf "%s-%s" $upstream_name $sum }}
 		# {{ $host }}{{ $path }}
-		{{ template "upstream-definition" (dict "Upstream" $upstream "Containers" $containers "Networks" $CurrentContainer.Networks) }}
+		{{ template "upstream-definition" (dict "Upstream" $upstream "Containers" $containers "Networks" $CurrentContainer.Networks "Path" $path) }}
 	{{ end }}
 {{ end }}
 
