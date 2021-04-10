@@ -152,6 +152,7 @@ proxy_set_header X-Original-URI $request_uri;
 proxy_set_header Proxy "";
 {{ end }}
 
+{{ $enable_ipv6 := eq (or ($.Env.ENABLE_IPV6) "") "true" }}
 {{ if (and (exists "/etc/nginx/certs/markl.tk.crt") (exists "/etc/nginx/certs/markl.tk.key")) }}
 server {
 	server_name _; # This is just an invalid value which will never trigger on a real hostname.
